@@ -1,0 +1,19 @@
+SHOW ALL:
+curl -X get cloud.eisenschmidt.family:46443/documents/
+
+ADD DOCUMENT:
+curl -X post -d "{\"title\":\"MyFirstTest\",\"text\":\"MyGodDamnFirstTest\"}" -H "Content-Type: application/json" cloud.eisenschmidt.family:46443/documents/
+curl -X post -d '{"title":"YourMumsGay","text":"NoU"}' -H "Content-Type: application/json" cloud.eisenschmidt.family:46443/documents/
+
+SHOW DOCUMENT:
+curl -X get cloud.eisenschmidt.family:46443/documents/6b5c3c25-c12b-443f-a7d3-cb13e3c31fd3
+
+DELETE DOCUMENT:
+curl -X delete cloud.eisenschmidt.family:46443/documents/6b5c3c25-c12b-443f-a7d3-cb13e3c31fd3
+
+SERVER SEPERAT MIT AUTOREFRESH STARTEN:
+lein ring server-headless
+
+SERVER BAUEN:
+lein ring uberjar
+

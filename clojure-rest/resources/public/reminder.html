@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+		<!--TODO: move down the page!-->
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+		<title>Moodle Chatbot</title>
+	</head>
+	<body>
+		<h1>Welcome to the reminder configuration page</h1>
+		<br/>
+		<form id="newEntryForm">
+			<!-- <input type="text" placeholder="Message" name="answer"/>-->
+			<textarea class="col-md-12" type="text" name="message" placeholder="Message"></textarea>
+			<input class="col-md-12" type="text" class="form-control" placeholder="Subject" name="subject"/>
+			<input class="col-md-12" type="text" class="form-control" placeholder="(* * * * * *) Crontime" name="crontime"/>
+			<p>seconds minutes hours day-of-month month weekday</p>
+			<p>day-of-month can only be ? not *</p>
+			<p>Example1: 0 0 * ? 7 * means "Every Full Hour any-day-of-month in Juli every-weekday" </p>
+			<p>Example2: 55 * * ? 7 * means "55 Seconds every minute every hour every day in Juli every-weekday" </p>
+		</form>
+		<button id="submit">Add</button>
+		<hr/>
+		<h2>Datebase-Dump <button id="refresh">Refresh</button></h2>
+		
+		<div class="dumparea">
+			<table class="table">
+			  <thead>
+				<tr>
+				  <th scope="col">#</th>
+				  <th scope="col">ID</th>
+				  <th scope="col">Message</th>
+ 				  <th scope="col">Subject</th>
+				  <th scope="col">CronTime</th>
+				  <th scoep="col">Delete</th>
+				</tr>
+			  </thead>
+			  <tbody id="dumpbody"></tbody>
+			</table>
+		</div>
+	</body>
+	<script>
+	$(document).ready(function(){
+		//AUTOFETCH DOCUMENTS
+		refreshView();
+	});
+	$("#refresh").click(function(){
+		refreshView();
+	});
+	
+	function getFormData($form){
+		var unindexed_array = $form.serializeArray();
+		var indexed_array = {};
+
+		$.map(unindexed_array, function(n, i){
+			indexed_array[n['name']] = n['value'];
+		});
+		return indexed_array;
+	};
+	
+	$("#submit").click(function(){
+		var dat = JSON.stringify(getFormData($("#newEntryForm")));
+		console.log(dat);
+		
+		$.ajax({
+		  type: "POST",
+		  url: "/reminder/reminders/",
+		  data: dat,
+		  contentType: "application/json; charset=utf-8",
+		  dataType: "json",
+		  success: function(result){
+			console.log(result);
+			refreshView();
+		  },
+		});
+	});
+
+	function deleteAnswer(index){
+
+                $.ajax({
+                  type: "DELETE",
+                  url: "/reminder/reminders/"+index,
+                  success: function(result){
+                        console.log(result);
+                        refreshView();
+                  },
+                });
+        };
+
+
+	function refreshView(){
+		$("#dumpbody").empty();
+		$.getJSON('/reminder/reminders/', function(data) {
+			console.log(data);
+			$.each(data, function(index) {
+				$("#dumpbody").append('<tr> \
+							<th scope="row">'+index+'</th> \
+							<td>'+data[index].rid+'</td> \
+							<td>'+data[index].message+'</td> \
+							<td>'+data[index].subject+'</td> \
+							<td>'+data[index].crontime+'</td> \
+							<td><button type="button" class="btn btn-danger" onclick="deleteAnswer('+data[index].rid+')">DELETE</button></td> \
+							</tr>'
+				);
+			});
+		});
+	}
+	</script>
+</html>

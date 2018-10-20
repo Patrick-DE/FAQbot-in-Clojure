@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+		<!--TODO: move down the page!-->
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+		<title>Moodle Chatbot</title>
+	</head>
+	<body>
+		<h1 style="display:inline;">Welcome to the Moodle LTI - Chatbot</h1><a href="/user/logout" style="float:right;padding:10px;">Logout</a>
+		</br>
+		<div class="container content" id="content">Hello student, please enter a question!</div>
+		<div class="container input-group">
+			<form id="newEntryForm" name="newEntryForm">
+				<input type="text" class="form-control" placeholder="Question" name="question"/>
+			</form>
+			<button type="button" class="input-group-addon" id="submit">Send</button>
+		</div>
+		<hr/>
+		<style>
+		html, body{
+		    height: 100%;
+		}
+		.content {
+		    overflow-y: scroll;
+		    overflow-x: hidden;
+		    max-height: 75%;
+		    padding: 10px;
+		    background: #fbfbfb;
+		}
+		#newEntryForm{
+		   width: 85%;
+		}
+		</style>
+	</body>
+	<script>
+	$(document).ready(function(){
+		//AUTOFETCH DOCUMENTS
+		refreshView();
+	});
+	$("#refresh").click(function(){
+		refreshView();
+	});
+	function getFormData($form){
+                var unindexed_array = $form.serializeArray();
+                var indexed_array = {};
+
+                $.map(unindexed_array, function(n, i){
+                        indexed_array[n['name']] = n['value'];
+                });
+                return indexed_array;
+        };
+	$("#submit").click(function(){
+		var formData = JSON.stringify(getFormData($("#newEntryForm")));
+		console.log(formData);
+
+		var question = formData;
+		//formData.split("\"")[3];
+		//question = question.toLowerCase().split(" ");
+		//var preparedStatement = "\"";
+		//question.forEach(function(element) {
+  		//	element = element.replace(/[^0-9a-z]/gi,"");
+		//	element = "''".concat(element).concat("'',");
+		// 	preparedStatement = preparedStatement.concat(element);
+		//});
+		//preparedStatement=preparedStatement.substring(0,preparedStatement.length-1);
+		//preparedStatement = "{\"triggers\" : ".concat(preparedStatement).concat("\"");
+		//preparedStatement = preparedStatement.concat(",".concat(formData.split("{")[1]))
+
+		console.log(question);
+		$.ajax({
+		  type: "POST",
+		  url: "/chats/",
+		  data: question,
+                  contentType: "application/json; charset=utf-8",
+		  dataType: "json",
+		  success: function(result){
+			document.newEntryForm.reset();
+			console.log(result);
+			refreshView();
+		  },
+		});
+	});
+	function refreshView(){
+		$("#content").empty();
+		$.getJSON('/chats/', function(data) {
+			console.log(data);
+			$.each(data, function(index) {
+				$("#content").append(data[index].date +"<br/>"+
+						data[index].question +"<br/>"+
+						data[index].answer +"<br/><br/>"
+				);
+			});
+		});
+	}
+	</script>
+</html>

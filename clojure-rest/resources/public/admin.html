@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+		<!--TODO: move down the page!-->
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+		<title>Moodle Chatbot</title>
+	</head>
+	<body>
+		<h1>Welcome to the adminarea</h1>
+		<br/>
+		<form id="newEntryForm">
+			<!-- <input type="text" placeholder="Answer" name="answer"/>-->
+			<textarea class="col-md-12" type="text" name="answer" placeholder="Answer"></textarea>
+			<input class="col-md-12" type="text" class="form-control" placeholder="Keyword1,Keyword2,Keyword3" name="keywords"/>
+		</form>
+		<button id="submit">Add</button>
+		<hr/>
+		<h2>Datebase-Dump <button id="refresh">Refresh</button></h2>
+		
+		<div class="dumparea">
+			<table class="table">
+			  <thead>
+				<tr>
+				  <th scope="col">#</th>
+				  <th scope="col">ID</th>
+				  <th scope="col">Answers</th>
+				  <th scope="col">Keywords</th>
+				  <th scoep="col">Delete</th>
+				</tr>
+			  </thead>
+			  <tbody id="dumpbody"></tbody>
+			</table>
+		</div>
+	</body>
+	<script>
+	$(document).ready(function(){
+		//AUTOFETCH DOCUMENTS
+		refreshView();
+	});
+	$("#refresh").click(function(){
+		refreshView();
+	});
+	
+	function getFormData($form){
+		var unindexed_array = $form.serializeArray();
+		var indexed_array = {};
+
+		$.map(unindexed_array, function(n, i){
+			indexed_array[n['name']] = n['value'];
+		});
+		return indexed_array;
+	};
+	
+	$("#submit").click(function(){
+		var dat = JSON.stringify(getFormData($("#newEntryForm")));
+		console.log(dat);
+		
+		$.ajax({
+		  type: "POST",
+		  url: "/admin/answers/",
+		  data: dat,
+		  contentType: "application/json; charset=utf-8",
+		  dataType: "json",
+		  success: function(result){
+			console.log(result);
+			refreshView();
+		  },
+		});
+	});
+
+	function deleteAnswer(index){
+
+                $.ajax({
+                  type: "DELETE",
+                  url: "/admin/answers/"+index,
+                  success: function(result){
+                        console.log(result);
+                        refreshView();
+                  },
+                });
+        };
+
+
+	function refreshView(){
+		$("#dumpbody").empty();
+		$.getJSON('/admin/answers/', function(data) {
+			console.log(data);
+			$.each(data, function(index) {
+				$("#dumpbody").append('<tr> \
+							<th scope="row">'+index+'</th> \
+							<td>'+data[index].aid+'</td> \
+							<td>'+data[index].answer+'</td> \
+							<td>'+data[index].keyword+'</td> \
+							<td><button type="button" class="btn btn-danger" onclick="deleteAnswer('+data[index].aid+')">DELETE</button></td> \
+							</tr>'
+				);
+			});
+		});
+	}
+	</script>
+</html>
